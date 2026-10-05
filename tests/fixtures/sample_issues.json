@@ -1,0 +1,272 @@
+[
+  {
+    "number": 1,
+    "title": "App crashes on startup when config file is missing",
+    "body": "Steps to reproduce:\n1. Delete `~/.gittriage/config.yaml`\n2. Run `gittriage --repo owner/repo`\n3. Observe unhandled `FileNotFoundError`\n\nExpected: graceful error message with instructions to run `gittriage init`.",
+    "labels": ["bug"],
+    "author": "alice-dev",
+    "created_at": "2024-01-15T09:00:00Z",
+    "url": "https://github.com/example/repo/issues/1"
+  },
+  {
+    "number": 2,
+    "title": "App crashes on launch when configuration is absent",
+    "body": "Same as issue #1 — getting a stack trace instead of a helpful message when the config file doesn't exist.",
+    "labels": ["bug"],
+    "author": "bob-oss",
+    "created_at": "2024-01-16T10:30:00Z",
+    "url": "https://github.com/example/repo/issues/2"
+  },
+  {
+    "number": 3,
+    "title": "Add support for GitLab repositories",
+    "body": "Would love to see GitLab support alongside GitHub. Many teams host on GitLab and this tool would be very useful there too.",
+    "labels": ["feature"],
+    "author": "carol-ml",
+    "created_at": "2024-01-17T14:00:00Z",
+    "url": "https://github.com/example/repo/issues/3"
+  },
+  {
+    "number": 4,
+    "title": "How do I authenticate with a GitHub token?",
+    "body": "I can't find in the docs how to pass my personal access token. I tried setting GITHUB_TOKEN env var but it doesn't seem to be picked up.",
+    "labels": ["question"],
+    "author": "dave-user",
+    "created_at": "2024-01-18T08:15:00Z",
+    "url": "https://github.com/example/repo/issues/4"
+  },
+  {
+    "number": 5,
+    "title": "Documentation for --dry-run flag is missing",
+    "body": "The README mentions a `--dry-run` flag but doesn't explain what it does or when to use it.",
+    "labels": ["docs"],
+    "author": "eve-writer",
+    "created_at": "2024-01-19T11:45:00Z",
+    "url": "https://github.com/example/repo/issues/5"
+  },
+  {
+    "number": 6,
+    "title": "Fetching 1000+ issues is extremely slow",
+    "body": "On a repo with 1200 open issues the tool takes over 3 minutes due to sequential API calls. Pagination should be parallelised or batched.",
+    "labels": ["perf"],
+    "author": "frank-perf",
+    "created_at": "2024-01-20T16:00:00Z",
+    "url": "https://github.com/example/repo/issues/6"
+  },
+  {
+    "number": 7,
+    "title": "API key logged in plaintext in debug output",
+    "body": "When running with DEBUG=1 the Anthropic API key is printed to stdout in full. This is a serious security issue for CI environments.",
+    "labels": ["security"],
+    "author": "grace-sec",
+    "created_at": "2024-01-21T09:30:00Z",
+    "url": "https://github.com/example/repo/issues/7"
+  },
+  {
+    "number": 8,
+    "title": "Support for Bitbucket Cloud",
+    "body": "",
+    "labels": ["feature"],
+    "author": "henry-bb",
+    "created_at": "2024-01-22T13:00:00Z",
+    "url": "https://github.com/example/repo/issues/8"
+  },
+  {
+    "number": 9,
+    "title": "Classification always returns 'bug' regardless of issue content",
+    "body": "Every issue is being classified as 'bug' even when it's clearly a feature request or question. The prompt may be broken.",
+    "labels": ["bug"],
+    "author": "isla-qa",
+    "created_at": "2024-01-23T10:00:00Z",
+    "url": "https://github.com/example/repo/issues/9"
+  },
+  {
+    "number": 10,
+    "title": "LLM always classifies issues as bugs",
+    "body": "Duplicate of #9? Getting the same behaviour — classifier is stuck on 'bug' for all inputs.",
+    "labels": ["bug"],
+    "author": "jack-tester",
+    "created_at": "2024-01-24T11:00:00Z",
+    "url": "https://github.com/example/repo/issues/10"
+  },
+  {
+    "number": 11,
+    "title": "Add --output flag to specify report file path",
+    "body": "",
+    "labels": ["feature"],
+    "author": "kate-ux",
+    "created_at": "2024-01-25T09:00:00Z",
+    "url": "https://github.com/example/repo/issues/11"
+  },
+  {
+    "number": 12,
+    "title": "triage_report.md overwrites existing file without warning",
+    "body": "If `triage_report.md` already exists, the tool silently overwrites it. There should be a `--overwrite` flag or a prompt.",
+    "labels": ["bug"],
+    "author": "liam-dev",
+    "created_at": "2024-01-26T14:30:00Z",
+    "url": "https://github.com/example/repo/issues/12"
+  },
+  {
+    "number": 13,
+    "title": "How do I increase the deduplication threshold?",
+    "body": "Is there a way to tune the cosine similarity threshold? 0.88 seems to flag too many false positives in my repo.",
+    "labels": ["question"],
+    "author": "mia-user",
+    "created_at": "2024-01-27T08:00:00Z",
+    "url": "https://github.com/example/repo/issues/13"
+  },
+  {
+    "number": 14,
+    "title": "Add OpenAI GPT-4o as an alternative LLM backend",
+    "body": "The README hints at an env var switch for OpenAI but it's not implemented. Would be great to support GPT-4o alongside Claude.",
+    "labels": ["feature"],
+    "author": "noah-ai",
+    "created_at": "2024-01-28T10:15:00Z",
+    "url": "https://github.com/example/repo/issues/14"
+  },
+  {
+    "number": 15,
+    "title": "Memory usage spikes to 4 GB when loading sentence-transformers model",
+    "body": "On a machine with 8 GB RAM the process uses 4 GB just loading the embedding model. Consider lazy-loading or a smaller model.",
+    "labels": ["perf"],
+    "author": "olivia-sre",
+    "created_at": "2024-01-29T16:45:00Z",
+    "url": "https://github.com/example/repo/issues/15"
+  },
+  {
+    "number": 16,
+    "title": "Rich table renders incorrectly in Windows Terminal",
+    "body": "On Windows 11 with Windows Terminal v1.19, the Rich table has broken Unicode box-drawing characters. macOS and Linux look fine.",
+    "labels": ["bug"],
+    "author": "peter-win",
+    "created_at": "2024-01-30T09:00:00Z",
+    "url": "https://github.com/example/repo/issues/16"
+  },
+  {
+    "number": 17,
+    "title": "Document environment variables in README",
+    "body": "ANTHROPIC_API_KEY and GITHUB_TOKEN are referenced but not fully explained. Please add a table of all supported env vars with descriptions.",
+    "labels": ["docs"],
+    "author": "quinn-doc",
+    "created_at": "2024-01-31T11:00:00Z",
+    "url": "https://github.com/example/repo/issues/17"
+  },
+  {
+    "number": 18,
+    "title": "Rate limit error not surfaced clearly to user",
+    "body": "",
+    "labels": ["bug"],
+    "author": "rachel-dev",
+    "created_at": "2024-02-01T08:30:00Z",
+    "url": "https://github.com/example/repo/issues/18"
+  },
+  {
+    "number": 19,
+    "title": "Support filtering issues by label before triage",
+    "body": "It would be useful to pass `--label bug` to only triage issues already tagged with a specific label.",
+    "labels": ["feature"],
+    "author": "sam-pm",
+    "created_at": "2024-02-02T14:00:00Z",
+    "url": "https://github.com/example/repo/issues/19"
+  },
+  {
+    "number": 20,
+    "title": "Draft reply for 'question' issues lacks context",
+    "body": "The auto-generated reply for question issues is too generic. It asks for steps-to-reproduce even on pure how-to questions.",
+    "labels": ["bug"],
+    "author": "tina-qa",
+    "created_at": "2024-02-03T10:00:00Z",
+    "url": "https://github.com/example/repo/issues/20"
+  },
+  {
+    "number": 21,
+    "title": "Add --apply flag to post labels and replies via API",
+    "body": "Per the spec this is a stretch goal. Tracking here so it doesn't get forgotten.",
+    "labels": ["feature"],
+    "author": "umar-contrib",
+    "created_at": "2024-02-04T09:00:00Z",
+    "url": "https://github.com/example/repo/issues/21"
+  },
+  {
+    "number": 22,
+    "title": "Token exposed in error message when repo not found",
+    "body": "When the repo doesn't exist and a token is provided, the error message includes the token in the URL. Tokens must be redacted from all log output.",
+    "labels": ["security"],
+    "author": "vera-sec",
+    "created_at": "2024-02-05T15:00:00Z",
+    "url": "https://github.com/example/repo/issues/22"
+  },
+  {
+    "number": 23,
+    "title": "How is priority score calculated?",
+    "body": "The README says priority is 1-5 but I can't find any explanation of the scoring criteria. Is it fully LLM-driven or are there heuristics?",
+    "labels": ["question"],
+    "author": "will-user",
+    "created_at": "2024-02-06T08:00:00Z",
+    "url": "https://github.com/example/repo/issues/23"
+  },
+  {
+    "number": 24,
+    "title": "Add JSON output format alongside Markdown",
+    "body": "For downstream tooling it would be useful to emit the triage results as a JSON file in addition to the Markdown report.",
+    "labels": ["feature"],
+    "author": "xena-eng",
+    "created_at": "2024-02-07T12:00:00Z",
+    "url": "https://github.com/example/repo/issues/24"
+  },
+  {
+    "number": 25,
+    "title": "sentence-transformers model download fails behind corporate proxy",
+    "body": "On a machine behind a corporate HTTP proxy, the first-run model download from Hugging Face fails. Setting HTTPS_PROXY has no effect.",
+    "labels": ["bug"],
+    "author": "yuki-sre",
+    "created_at": "2024-02-08T09:30:00Z",
+    "url": "https://github.com/example/repo/issues/25"
+  },
+  {
+    "number": 26,
+    "title": "CLI --help output is missing descriptions for several flags",
+    "body": "",
+    "labels": ["docs"],
+    "author": "zara-doc",
+    "created_at": "2024-02-09T11:00:00Z",
+    "url": "https://github.com/example/repo/issues/26"
+  },
+  {
+    "number": 27,
+    "title": "Deduplication misses near-duplicate issues with different capitalisation",
+    "body": "Issues titled 'app crash on startup' and 'App Crash On Startup' are not flagged as duplicates. Embeddings should be case-insensitive.",
+    "labels": ["bug"],
+    "author": "alex-ml",
+    "created_at": "2024-02-10T14:00:00Z",
+    "url": "https://github.com/example/repo/issues/27"
+  },
+  {
+    "number": 28,
+    "title": "Performance regression in v0.3: triage now takes 2x longer",
+    "body": "After upgrading from v0.2 to v0.3, the full triage pipeline for 50 issues went from 45 seconds to 90 seconds. Bisected to the dedup step.",
+    "labels": ["perf", "bug"],
+    "author": "ben-perf",
+    "created_at": "2024-02-11T10:00:00Z",
+    "url": "https://github.com/example/repo/issues/28"
+  },
+  {
+    "number": 29,
+    "title": "Support multiple repos in a single run",
+    "body": "Allow passing multiple `--repo` flags so a maintainer can triage issues across all their repos in one command.",
+    "labels": ["feature"],
+    "author": "cleo-pm",
+    "created_at": "2024-02-12T09:00:00Z",
+    "url": "https://github.com/example/repo/issues/29"
+  },
+  {
+    "number": 30,
+    "title": "Triage report includes closed issues",
+    "body": "The report sometimes includes issues that were closed during the triage run. The fetch should filter state=open strictly.",
+    "labels": ["bug"],
+    "author": "dan-qa",
+    "created_at": "2024-02-13T13:00:00Z",
+    "url": "https://github.com/example/repo/issues/30"
+  }
+]
