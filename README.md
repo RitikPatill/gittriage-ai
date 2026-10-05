@@ -8,7 +8,7 @@ A local CLI tool that connects to any GitHub repository, pulls its open issues, 
 
 ## Status
 
-**M1 — scaffold (current)**
+**M2 — GitHub issue fetcher (current)**
 
 | Deliverable | State |
 |---|---|
@@ -18,7 +18,9 @@ A local CLI tool that connects to any GitHub repository, pulls its open issues, 
 | `requirements.txt` with pinned deps | done |
 | `.gitignore`, MIT `LICENSE` | done |
 | `tests/test_scaffold.py` — import smoke tests | done |
-| GitHub issue fetching (`fetcher.py`) | M2 |
+| `fetcher.py` — GitHub issue fetching via PyGithub | done |
+| `tests/fixtures/sample_issues.json` — 30-issue dry-run fixture | done |
+| `tests/test_fetcher.py` — fetcher unit tests (dry-run + mocked live) | done |
 | LLM classification + priority (`triage.py`) | M3 |
 | Semantic deduplication (`dedup.py`) | M4 |
 | Rich table + Markdown report (`report.py`) | M5 |
@@ -28,13 +30,14 @@ A local CLI tool that connects to any GitHub repository, pulls its open issues, 
 
 ## What it does
 
-GitTriage AI automates first-pass issue triage in five steps:
+GitTriage AI automates first-pass issue triage in a six-step pipeline. Steps marked **done** are implemented; the rest land in later milestones.
 
-1. **Classification** — assigns one of a fixed label taxonomy (`bug`, `feature`, `question`, `docs`, `perf`, `security`) per issue.
-2. **Priority scoring** — rates each issue 1–5 based on title + body signals (user impact, blocking language, repro steps present).
-3. **Semantic deduplication** — embeds issue titles with a local `sentence-transformers` model and flags likely duplicates (cosine similarity > 0.88).
-4. **Draft reply generation** — for `question` and `bug` issues, generates a short helpful first-reply that asks for missing info or confirms the next step.
-5. **Triage report** — renders a Rich table in the terminal and writes a `triage_report.md` that can be committed back to the repo.
+1. **Issue fetching** *(done — M2)* — pulls open issues (number, title, body, labels, author, `created_at`, URL) from any public or private GitHub repo via PyGithub. Pass `--dry-run` to load a bundled 30-issue fixture instead of hitting the API.
+2. **Classification** *(M3)* — assigns one of a fixed label taxonomy (`bug`, `feature`, `question`, `docs`, `perf`, `security`) per issue.
+3. **Priority scoring** *(M3)* — rates each issue 1–5 based on title + body signals (user impact, blocking language, repro steps present).
+4. **Semantic deduplication** *(M4)* — embeds issue titles with a local `sentence-transformers` model and flags likely duplicates (cosine similarity > 0.88).
+5. **Draft reply generation** *(M4)* — for `question` and `bug` issues, generates a short helpful first-reply that asks for missing info or confirms the next step.
+6. **Triage report** *(M5)* — renders a Rich table in the terminal and writes a `triage_report.md` that can be committed back to the repo.
 
 ---
 
@@ -63,8 +66,19 @@ pip install -r requirements.txt
 # 3. Install the package in editable mode (required for src/ layout)
 pip install -e .
 
-# 4. Run (placeholder — full implementation in M5)
-gittriage --repo owner/repo --limit 50
+# 4. Run the test suite (no API token required — uses dry-run fixture)
+pytest
+
+# 5. Try the fetcher in a Python session (no token needed)
+python - <<'EOF'
+from gittriage.fetcher import fetch_issues
+issues = fetch_issues("owner/repo", limit=5, dry_run=True)
+for i in issues:
+    print(i["number"], i["title"])
+EOF
+
+# Full CLI wiring: M5
+# gittriage --repo owner/repo --limit 50
 ```
 
 ---
@@ -86,15 +100,17 @@ Full reference will be documented in M6.
 src/gittriage/
 ├── __init__.py       # package root
 ├── cli.py            # Typer CLI entry point stub  (full wiring: M5)
-├── fetcher.py        # GitHub issue fetching        (M2 — not yet created)
+├── fetcher.py        # GitHub issue fetching        (M2)
 ├── triage.py         # classification + priority    (M3 — not yet created)
 ├── dedup.py          # sentence-transformers dedup  (M4 — not yet created)
 └── report.py         # Rich table + Markdown export (M5 — not yet created)
 
 tests/
 ├── __init__.py
-├── test_scaffold.py  # import smoke tests  (M1)
-└── fixtures/         # 30-issue sample fixture     (M2 — not yet created)
+├── test_scaffold.py            # import smoke tests  (M1)
+├── test_fetcher.py             # fetcher unit tests  (M2)
+└── fixtures/
+    └── sample_issues.json      # 30-issue dry-run fixture  (M2)
 ```
 
 ---
