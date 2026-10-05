@@ -1,0 +1,16 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "gittriage-ai"
+version = "0.1.0"
+description = "Local CLI tool for AI-powered GitHub issue triage"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+
+[project.scripts]
+gittriage = "gittriage.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/gittriage"]
