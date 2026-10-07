@@ -8,7 +8,7 @@ A local CLI tool that connects to any GitHub repository, pulls its open issues, 
 
 ## Status
 
-**M4 — semantic deduplication (current)**
+**M5 — cli + rich report (current)**
 
 | Deliverable | State |
 |---|---|
@@ -24,8 +24,10 @@ A local CLI tool that connects to any GitHub repository, pulls its open issues, 
 | `triage.py` — LLM classification, priority, draft replies | done |
 | `tests/test_triage.py` — triage unit tests (mocked API) | done |
 | Semantic deduplication (`dedup.py`) | done |
-| Rich table + Markdown report (`report.py`) | M5 |
-| Full CLI wiring and end-to-end run | M5 |
+| Full CLI wiring (`cli.py`) with `--repo`, `--limit`, `--output`, `--dry-run`, `--token` | done |
+| Rich table rendered in terminal | done |
+| `triage_report.md` written with summary + per-issue details | done |
+| `tests/test_cli.py` — CLI unit tests (5 tests, no real API calls) | done |
 
 ---
 
@@ -38,7 +40,7 @@ GitTriage AI automates first-pass issue triage in a six-step pipeline. Steps mar
 3. **Priority scoring** *(done — M3)* — rates each issue 1–5 based on title + body signals (user impact, blocking language, repro steps present).
 4. **Draft reply generation** *(done — M3)* — for `question` and `bug` issues, generates a short helpful first-reply that asks for missing info or confirms the next step.
 5. **Semantic deduplication** *(done — M4)* — embeds issue titles with `sentence-transformers/all-MiniLM-L6-v2` (CPU-only) and flags likely duplicates (cosine similarity > 0.88). Results are merged into the triage output as `duplicate_of: int | None`.
-6. **Triage report** *(M5)* — renders a Rich table in the terminal and writes a `triage_report.md` that can be committed back to the repo.
+6. **Triage report** *(done — M5)* — renders a Rich table in the terminal with columns `#`, `Title`, `Label`, `Priority`, `Dup of` (rows color-coded red ≥ 4, yellow = 3) and writes a `triage_report.md` with a summary section (total issues, label counts, duplicate count) and per-issue details including draft replies.
 
 ---
 
@@ -92,8 +94,11 @@ print(json.dumps(results[:2], indent=2))
 #  {"number": 3, "label": "bug", "priority": 4, "draft_reply": "...", "duplicate_of": 1}]
 EOF
 
-# Full CLI wiring: M5
-# gittriage --repo owner/repo --limit 50
+# Full CLI — works now (M5)
+export GITHUB_TOKEN=ghp_...   # optional for public repos
+gittriage --repo owner/repo --limit 50
+# or without a token, using the bundled fixture:
+gittriage --repo owner/repo --dry-run --output report.md
 ```
 
 ---
@@ -118,11 +123,10 @@ Full reference will be documented in M6.
 ```
 src/gittriage/
 ├── __init__.py       # package root
-├── cli.py            # Typer CLI entry point stub  (full wiring: M5)
+├── cli.py            # Typer CLI — fully wired (M5)
 ├── fetcher.py        # GitHub issue fetching        (M2)
 ├── triage.py         # LLM classification + priority + draft replies  (M3)
-├── dedup.py          # sentence-transformers dedup  (M4)
-└── report.py         # Rich table + Markdown export (M5 — not yet created)
+└── dedup.py          # sentence-transformers dedup  (M4)
 
 tests/
 ├── __init__.py
@@ -130,9 +134,25 @@ tests/
 ├── test_fetcher.py             # fetcher unit tests  (M2)
 ├── test_triage.py              # triage unit tests   (M3)
 ├── test_dedup.py               # dedup unit tests    (M4)
+├── test_cli.py                 # CLI unit tests      (M5)
 └── fixtures/
     └── sample_issues.json      # 30-issue dry-run fixture  (M2)
+
+triage_report.md      # generated — written by `gittriage` on each run (M5)
 ```
+
+---
+
+## Roadmap
+
+| Milestone | Deliverable | State |
+|---|---|---|
+| M1 | Project scaffold — package layout, pyproject.toml, smoke tests | done |
+| M2 | GitHub issue fetching — PyGithub, dry-run fixture | done |
+| M3 | LLM triage core — classification, priority scoring, draft replies | done |
+| M4 | Semantic deduplication — sentence-transformers, cosine similarity | done |
+| M5 | CLI wiring + Rich report — Typer, Rich table, `triage_report.md` | done |
+| M6 | <!-- TODO --> | planned |
 
 ---
 
