@@ -36,9 +36,11 @@ def triage_issue(issue: dict) -> dict:
     return result
 
 
-def triage_issues(issues: list[dict]) -> list[dict]:
+def triage_issues(issues: list[dict], threshold: float = 0.88) -> list[dict]:
     """Triage a list of issues, returning one result dict per issue."""
-    return [triage_issue(issue) for issue in issues]
+    results = [triage_issue(issue) for issue in issues]
+    from gittriage.dedup import annotate_duplicates
+    return annotate_duplicates(results, issues, threshold=threshold)
 
 
 def _build_user_message(issue: dict) -> str:

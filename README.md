@@ -8,7 +8,7 @@ A local CLI tool that connects to any GitHub repository, pulls its open issues, 
 
 ## Status
 
-**M3 — LLM triage core (current)**
+**M4 — semantic deduplication (current)**
 
 | Deliverable | State |
 |---|---|
@@ -23,7 +23,7 @@ A local CLI tool that connects to any GitHub repository, pulls its open issues, 
 | `tests/test_fetcher.py` — fetcher unit tests (dry-run + mocked live) | done |
 | `triage.py` — LLM classification, priority, draft replies | done |
 | `tests/test_triage.py` — triage unit tests (mocked API) | done |
-| Semantic deduplication (`dedup.py`) | M4 |
+| Semantic deduplication (`dedup.py`) | done |
 | Rich table + Markdown report (`report.py`) | M5 |
 | Full CLI wiring and end-to-end run | M5 |
 
@@ -37,7 +37,7 @@ GitTriage AI automates first-pass issue triage in a six-step pipeline. Steps mar
 2. **Classification** *(done — M3)* — assigns one of a fixed label taxonomy (`bug`, `feature`, `question`, `docs`, `perf`, `security`) per issue via Claude (or OpenAI with `LLM_PROVIDER=openai`).
 3. **Priority scoring** *(done — M3)* — rates each issue 1–5 based on title + body signals (user impact, blocking language, repro steps present).
 4. **Draft reply generation** *(done — M3)* — for `question` and `bug` issues, generates a short helpful first-reply that asks for missing info or confirms the next step.
-5. **Semantic deduplication** *(M4)* — embeds issue titles with a local `sentence-transformers` model and flags likely duplicates (cosine similarity > 0.88).
+5. **Semantic deduplication** *(done — M4)* — embeds issue titles with `sentence-transformers/all-MiniLM-L6-v2` (CPU-only) and flags likely duplicates (cosine similarity > 0.88). Results are merged into the triage output as `duplicate_of: int | None`.
 6. **Triage report** *(M5)* — renders a Rich table in the terminal and writes a `triage_report.md` that can be committed back to the repo.
 
 ---
@@ -78,17 +78,18 @@ for i in issues:
     print(i["number"], i["title"])
 EOF
 
-# 6. Try the triage module against the dry-run fixture (requires ANTHROPIC_API_KEY)
+# 6. Try the triage + dedup pipeline against the dry-run fixture (requires ANTHROPIC_API_KEY)
 export ANTHROPIC_API_KEY=sk-ant-...
 python - <<'EOF'
 import json
 from gittriage.fetcher import fetch_issues
-from gittriage.triage import triage_issue
+from gittriage.triage import triage_issues
 
-issues = fetch_issues("owner/repo", limit=1, dry_run=True)
-result = triage_issue(issues[0])
-print(json.dumps(result, indent=2))
-# {"number": 1, "label": "bug", "priority": 4, "draft_reply": "..."}
+issues = fetch_issues("owner/repo", limit=10, dry_run=True)
+results = triage_issues(issues)          # classifies, scores, and deduplicates
+print(json.dumps(results[:2], indent=2))
+# [{"number": 1, "label": "bug", "priority": 4, "draft_reply": "...", "duplicate_of": null},
+#  {"number": 3, "label": "bug", "priority": 4, "draft_reply": "...", "duplicate_of": 1}]
 EOF
 
 # Full CLI wiring: M5
@@ -120,7 +121,7 @@ src/gittriage/
 ├── cli.py            # Typer CLI entry point stub  (full wiring: M5)
 ├── fetcher.py        # GitHub issue fetching        (M2)
 ├── triage.py         # LLM classification + priority + draft replies  (M3)
-├── dedup.py          # sentence-transformers dedup  (M4 — not yet created)
+├── dedup.py          # sentence-transformers dedup  (M4)
 └── report.py         # Rich table + Markdown export (M5 — not yet created)
 
 tests/
@@ -128,6 +129,7 @@ tests/
 ├── test_scaffold.py            # import smoke tests  (M1)
 ├── test_fetcher.py             # fetcher unit tests  (M2)
 ├── test_triage.py              # triage unit tests   (M3)
+├── test_dedup.py               # dedup unit tests    (M4)
 └── fixtures/
     └── sample_issues.json      # 30-issue dry-run fixture  (M2)
 ```
