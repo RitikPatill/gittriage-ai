@@ -1,161 +1,121 @@
 # GitTriage AI
 
-<!-- badges placeholder -->
+> CLI agent that reads open GitHub issues and uses an LLM to auto-label, prioritize, cluster duplicates, and draft first replies.
 
-A local CLI tool that connects to any GitHub repository, pulls its open issues, and runs them through an LLM-powered triage pipeline — fully local, auditable, and configurable.
+![demo](demo.gif)
 
----
+## What it is
 
-## Status
+GitTriage AI is a local command-line tool that connects to any public (or private, with a token) GitHub repository, pulls its open issues, and runs them through a five-stage pipeline: classification into a fixed label taxonomy, priority scoring from 1–5, semantic deduplication using a local embedding model, draft reply generation for `bug` and `question` issues, and a final triage report rendered in the terminal and written to disk as `triage_report.md`.
 
-**M5 — cli + rich report (current)**
+Everything runs on your machine. No issue content is sent anywhere except to the LLM backend you configure — Claude by default, OpenAI via an environment variable switch. A bundled 30-issue fixture lets you run the full pipeline without a GitHub token at all.
 
-| Deliverable | State |
-|---|---|
-| `src/gittriage/` package layout with `__init__.py` | done |
-| `cli.py` — Typer entry point stub (`gittriage` command registered) | done |
-| `pyproject.toml` with Hatchling build backend and `[project.scripts]` | done |
-| `requirements.txt` with pinned deps | done |
-| `.gitignore`, MIT `LICENSE` | done |
-| `tests/test_scaffold.py` — import smoke tests | done |
-| `fetcher.py` — GitHub issue fetching via PyGithub | done |
-| `tests/fixtures/sample_issues.json` — 30-issue dry-run fixture | done |
-| `tests/test_fetcher.py` — fetcher unit tests (dry-run + mocked live) | done |
-| `triage.py` — LLM classification, priority, draft replies | done |
-| `tests/test_triage.py` — triage unit tests (mocked API) | done |
-| Semantic deduplication (`dedup.py`) | done |
-| Full CLI wiring (`cli.py`) with `--repo`, `--limit`, `--output`, `--dry-run`, `--token` | done |
-| Rich table rendered in terminal | done |
-| `triage_report.md` written with summary + per-issue details | done |
-| `tests/test_cli.py` — CLI unit tests (5 tests, no real API calls) | done |
-
----
-
-## What it does
-
-GitTriage AI automates first-pass issue triage in a six-step pipeline. Steps marked **done** are implemented; the rest land in later milestones.
-
-1. **Issue fetching** *(done — M2)* — pulls open issues (number, title, body, labels, author, `created_at`, URL) from any public or private GitHub repo via PyGithub. Pass `--dry-run` to load a bundled 30-issue fixture instead of hitting the API.
-2. **Classification** *(done — M3)* — assigns one of a fixed label taxonomy (`bug`, `feature`, `question`, `docs`, `perf`, `security`) per issue via Claude (or OpenAI with `LLM_PROVIDER=openai`).
-3. **Priority scoring** *(done — M3)* — rates each issue 1–5 based on title + body signals (user impact, blocking language, repro steps present).
-4. **Draft reply generation** *(done — M3)* — for `question` and `bug` issues, generates a short helpful first-reply that asks for missing info or confirms the next step.
-5. **Semantic deduplication** *(done — M4)* — embeds issue titles with `sentence-transformers/all-MiniLM-L6-v2` (CPU-only) and flags likely duplicates (cosine similarity > 0.88). Results are merged into the triage output as `duplicate_of: int | None`.
-6. **Triage report** *(done — M5)* — renders a Rich table in the terminal with columns `#`, `Title`, `Label`, `Priority`, `Dup of` (rows color-coded red ≥ 4, yellow = 3) and writes a `triage_report.md` with a summary section (total issues, label counts, duplicate count) and per-issue details including draft replies.
-
----
-
-## Why it exists
-
-Maintainers of OSS projects spend hours every week on first-pass triage. Existing tools are SaaS black boxes that require sending issue content to third-party servers. GitTriage AI is:
-
-- **Fully local** — classification and deduplication run on your machine; no issue content leaves your environment unless you opt into the Claude API.
-- **Auditable** — every classification decision is logged; you can inspect and override.
-- **Configurable** — swap the LLM backend via an env var, tune the dedup threshold, or run in `--dry-run` mode without touching any API.
-
----
-
-## Quick start
-
-> **Prerequisites:** Python 3.10+, a virtual environment recommended.
-> **Note:** `sentence-transformers` pulls `torch` as a transitive dependency — first `pip install` downloads ~500 MB.
+## Quickstart
 
 ```bash
-# 1. Install build backend
-pip install hatchling
+git clone https://github.com/RitikPatill/gittriage-ai.git
+cd gittriage-ai
 
-# 2. Install dependencies
+# Install dependencies (sentence-transformers pulls torch: ~500 MB on first run)
 pip install -r requirements.txt
-
-# 3. Install the package in editable mode (required for src/ layout)
 pip install -e .
 
-# 4. Run the test suite (no API token required — uses dry-run fixture)
-pytest
-
-# 5. Try the fetcher in a Python session (no token needed)
-python - <<'EOF'
-from gittriage.fetcher import fetch_issues
-issues = fetch_issues("owner/repo", limit=5, dry_run=True)
-for i in issues:
-    print(i["number"], i["title"])
-EOF
-
-# 6. Try the triage + dedup pipeline against the dry-run fixture (requires ANTHROPIC_API_KEY)
+# Set your API key
 export ANTHROPIC_API_KEY=sk-ant-...
-python - <<'EOF'
-import json
-from gittriage.fetcher import fetch_issues
-from gittriage.triage import triage_issues
 
-issues = fetch_issues("owner/repo", limit=10, dry_run=True)
-results = triage_issues(issues)          # classifies, scores, and deduplicates
-print(json.dumps(results[:2], indent=2))
-# [{"number": 1, "label": "bug", "priority": 4, "draft_reply": "...", "duplicate_of": null},
-#  {"number": 3, "label": "bug", "priority": 4, "draft_reply": "...", "duplicate_of": 1}]
-EOF
-
-# Full CLI — works now (M5)
-export GITHUB_TOKEN=ghp_...   # optional for public repos
-gittriage --repo owner/repo --limit 50
-# or without a token, using the bundled fixture:
-gittriage --repo owner/repo --dry-run --output report.md
+# Run against the bundled fixture — no GitHub token needed
+gittriage --repo pallets/flask --dry-run --limit 10
 ```
 
----
+## Usage
 
-## Environment variables
+The `gittriage` command accepts a `--repo owner/repo` flag and runs the full pipeline, printing a Rich table and writing `triage_report.md`.
 
-| Variable | Description |
-|---|---|
-| `ANTHROPIC_API_KEY` | API key for Claude (classification, priority, draft replies) |
-| `ANTHROPIC_MODEL` | Override the Claude model (default: `claude-haiku-4-5-20251001`) |
-| `LLM_PROVIDER` | Set to `openai` to use OpenAI instead of Anthropic |
-| `OPENAI_API_KEY` | API key for OpenAI (required when `LLM_PROVIDER=openai`) |
-| `OPENAI_MODEL` | Override the OpenAI model (default: `gpt-4o-mini`) |
-| `GITHUB_TOKEN` | Personal access token for private repos or higher rate limits |
+```bash
+# Live run against a public repo
+gittriage --repo owner/repo --limit 50
 
-Full reference will be documented in M6.
+# Authenticated run (private repos or higher rate limits)
+gittriage --repo owner/repo --token ghp_xxx --limit 100
 
----
+# Save report to a custom path
+gittriage --repo owner/repo --output reports/flask.md
 
-## Project layout
+# Tighten the dedup threshold (default 0.88)
+gittriage --repo owner/repo --threshold 0.92
+
+# Switch to OpenAI backend
+LLM_PROVIDER=openai OPENAI_API_KEY=sk-... gittriage --repo owner/repo --dry-run
+```
+
+The terminal output is a color-coded table — priority ≥ 4 rows in red, priority 3 in yellow — with columns `#`, `Title`, `Label`, `Priority`, and `Dup of`. The written report includes a summary (total issues, label counts, duplicate count) and per-issue details with draft replies.
+
+| Variable | Default | Description |
+|---|---|---|
+| `ANTHROPIC_API_KEY` | *(required)* | Claude API key |
+| `ANTHROPIC_MODEL` | `claude-haiku-4-5-20251001` | Override Claude model |
+| `LLM_PROVIDER` | `anthropic` | Set to `openai` to use OpenAI |
+| `OPENAI_API_KEY` | — | Required when `LLM_PROVIDER=openai` |
+| `OPENAI_MODEL` | `gpt-4o-mini` | Override OpenAI model |
+| `GITHUB_TOKEN` | — | PAT for private repos / higher rate limits |
+
+## Architecture
+
+```
+GitHub REST API
+      │
+      ▼
+fetcher.py  ──► [list of issue dicts]
+      │
+      ├──► triage.py (Anthropic / OpenAI)
+      │         label, priority, draft_reply
+      │
+      └──► dedup.py (sentence-transformers)
+                 duplicate_of
+                 │
+                 ▼
+            cli.py
+         ┌────────────┐
+         │ Rich table │  terminal
+         └────────────┘
+         ┌──────────────────┐
+         │ triage_report.md │  disk
+         └──────────────────┘
+```
+
+## Project structure
 
 ```
 src/gittriage/
-├── __init__.py       # package root
-├── cli.py            # Typer CLI — fully wired (M5)
-├── fetcher.py        # GitHub issue fetching        (M2)
-├── triage.py         # LLM classification + priority + draft replies  (M3)
-└── dedup.py          # sentence-transformers dedup  (M4)
+├── cli.py            # Typer entry point; orchestrates the pipeline
+├── fetcher.py        # PyGithub issue fetching and dry-run fixture loader
+├── triage.py         # LLM classification, priority scoring, draft replies
+└── dedup.py          # sentence-transformers cosine similarity deduplication
 
 tests/
-├── __init__.py
-├── test_scaffold.py            # import smoke tests  (M1)
-├── test_fetcher.py             # fetcher unit tests  (M2)
-├── test_triage.py              # triage unit tests   (M3)
-├── test_dedup.py               # dedup unit tests    (M4)
-├── test_cli.py                 # CLI unit tests      (M5)
+├── test_fetcher.py   # fetcher unit tests (dry-run + mocked live)
+├── test_triage.py    # triage unit tests (mocked LLM API)
+├── test_dedup.py     # dedup unit tests
+├── test_cli.py       # CLI integration tests (no real API calls)
 └── fixtures/
-    └── sample_issues.json      # 30-issue dry-run fixture  (M2)
-
-triage_report.md      # generated — written by `gittriage` on each run (M5)
+    └── sample_issues.json   # 30-issue dry-run fixture
 ```
-
----
 
 ## Roadmap
 
-| Milestone | Deliverable | State |
-|---|---|---|
-| M1 | Project scaffold — package layout, pyproject.toml, smoke tests | done |
-| M2 | GitHub issue fetching — PyGithub, dry-run fixture | done |
-| M3 | LLM triage core — classification, priority scoring, draft replies | done |
-| M4 | Semantic deduplication — sentence-transformers, cosine similarity | done |
-| M5 | CLI wiring + Rich report — Typer, Rich table, `triage_report.md` | done |
-| M6 | <!-- TODO --> | planned |
-
----
+- [ ] `--apply` flag to post draft replies and apply labels via the GitHub API
+- [ ] Incremental mode: skip issues already present in a previous report
+- [ ] Configurable label taxonomy via a YAML file
+- [ ] HTML report output in addition to Markdown
+- [ ] GitHub Actions workflow to run triage on a cron schedule
 
 ## License
 
 MIT — see [LICENSE](LICENSE).
+
+---
+
+Built autonomously by [autodev](https://github.com/RitikPatill/autodev),
+a multi-agent orchestrator I designed. Each commit in this repo was
+authored by me; the implementation work was performed by Sonnet under
+the orchestrator's control. Read the orchestrator's README to see how.
