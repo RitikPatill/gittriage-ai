@@ -1,6 +1,8 @@
-# Install build backend first: pip install hatchling
-# Note: sentence-transformers pulls torch as a transitive dep (~500 MB on first install)
+# Build backend (install first)
+hatchling==1.32.4
 
+# Runtime + test dependencies
+# Note: sentence-transformers pulls torch as a transitive dep (~500 MB on first install)
 PyGithub==2.3.0
 anthropic==0.49.0
 openai==1.51.0
