@@ -1,5 +1,9 @@
 # GitTriage AI
 
+
+> **Video walkthrough:** https://youtu.be/S5s7k8x0rsI
+> **60-second overview:** https://youtu.be/Zr5mssFOD9c
+
 > CLI agent that reads open GitHub issues and uses an LLM to auto-label, prioritize, cluster duplicates, and draft first replies.
 
 ![demo](demo.gif)
